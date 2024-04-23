@@ -5,6 +5,9 @@ from leaderboard.models import Match, Player
 
 DUPLICATE_ERROR = 'Player has already been added with the same first and last name.'
 
+MAX_SCORE = 30
+MIN_WIN_SCORE = 11
+INIT_RATING = 1450
 
 class MatchForm(forms.ModelForm):
     """Form to submit a match result."""
@@ -15,17 +18,17 @@ class MatchForm(forms.ModelForm):
     draw = forms.CheckboxInput(attrs={'class': 'form-check-input'}),
 
     def __init__(self, *args, **kwargs):
-        """Initialize form with initial winning score of 7."""
+        """Initialize form with initial winning score of MIN_WIN_SCORE."""
         super().__init__(*args, **kwargs)
-        self.min_score = 7    
+        self.min_score = MIN_WIN_SCORE
         self.fields['winning_score'].initial = self.min_score
 
     class Meta():
         model = Match
         fields = ['winner', 'winning_score', 'loser', 'losing_score', 'draw']
         widgets = {
-            'winning_score': forms.NumberInput(attrs={'min': 6, 'max': 7, 'class': 'form-control'}),
-            'losing_score': forms.NumberInput(attrs={'min': 0, 'max': 6, 'class': 'form-control'}),
+            'winning_score': forms.NumberInput(attrs={'min': MIN_WIN_SCORE, 'max': MAX_SCORE, 'class': 'form-control'}),
+            'losing_score': forms.NumberInput(attrs={'min': 0, 'max': MAX_SCORE, 'class': 'form-control'}),
         }
 
     def clean(self):
@@ -41,7 +44,7 @@ class MatchForm(forms.ModelForm):
             raise ValidationError('The winner and loser must be different players.')
         if winning_score < self.min_score:
             if winning_score != losing_score:
-                raise ValidationError('Winning score must be ' + self.min_score + ' or greater (except Draw).')
+                raise ValidationError('Winning score must be ' + str(self.min_score) + ' or greater (except Draw).')
         if losing_score < 0:
             raise ValidationError('Losing score must be 0 or greater.')
         if winning_score == losing_score and draw == False:
@@ -66,7 +69,7 @@ class PlayerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['rating'].initial = 1450
+        self.fields['rating'].initial = INIT_RATING
 
     class Meta:
         model = Player
